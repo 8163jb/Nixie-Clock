@@ -65,10 +65,10 @@ void setup()
   pinMode(data, 1);  //Set up the data, clock, and latch pins as outputs
   pinMode(clock, 1);
   pinMode(latch, 1);
-  pinMode(top, 0);
+  pinMode(top, 0);   //Set up the buttons as inputs
   pinMode(middle, 0);
   pinMode(bottom, 0);
-  digitalWrite(top, 1);
+  digitalWrite(top, 1);  //Enable the internal pull-up resistors for the buttons (also inverts the logic)
   digitalWrite(middle, 1);
   digitalWrite(bottom, 1);
 }
@@ -85,11 +85,11 @@ void loop()
       f = (time.second % 10);   
   displayNumber(a, b, c, d, e, f);  //Display the numbers (custom subroutine)
   delay(100);                     //Delay 1/10th of a second
-  if(digitalRead(middle) == LOW)
+  if(digitalRead(middle) == LOW) //If the middle button is pressed
   {
-    while(digitalRead(middle) == LOW);
-    delay(100);
-    setTime();
+    while(digitalRead(middle) == LOW); //Wait for it to not be pressed
+    delay(100); //Delay to debounce
+    setTime(); //Set the time (custom subroutine)
   }
 }
 
@@ -106,48 +106,48 @@ void displayNumber(int a, int b, int c, int d, int e, int f) //Used to display t
   digitalWrite(latch, 1); //Pull the latch high again
 }
 
-void setTime()
+void setTime() //used to set the time
 {  
-  int timeToSet[3] = {0, 0, 0}; 
-  for(int j = 0; j < 3; j++)
+  int timeToSet[3] = {0, 0, 0}; //array we will use as temporary storage
+  for(int j = 0; j < 3; j++)    //for loop, runs 3 times, with j starting at 0 and ending at 2 - used to index the array
   {
-    timeToSet[j] = 0;
-    while(digitalRead(middle) == HIGH)
+    timeToSet[j] = 0; //Set the element we are changing to 0
+    while(digitalRead(middle) == HIGH) //Do this until the middle button is pressed
     {
-      if(digitalRead(top) == LOW)
+      if(digitalRead(top) == LOW) //If the top button is pressed
       {
-        while(digitalRead(top) == LOW);
-        delay(100);
-        timeToSet[j]++;
-        if ((j == 0) && (timeToSet[j] > 23)) timeToSet[j] = 0;
-        if (timeToSet[j] > 59) timeToSet[j] = 0;
+        while(digitalRead(top) == LOW); //Wait for it to stop being pressed
+        delay(100); //Delay to debounce
+        timeToSet[j]++; //Increment the value in the element we are currently setting
+        if ((j == 0) && (timeToSet[j] > 23)) timeToSet[j] = 0; //If we are altering the hours, and it is greater than 23, set it to 0
+        if (timeToSet[j] > 59) timeToSet[j] = 0; //If we are not altering the hours, and it is greater than 59, set it to 0
       }
-      if(digitalRead(bottom) == LOW)
+      if(digitalRead(bottom) == LOW) //If the bottom button is pressed
       {
-        while(digitalRead(bottom) == LOW);
-        delay(100);
-        timeToSet[j]--;
-        if ((j == 0) && (timeToSet[j] < 0)) timeToSet[j] = 23;
-        if (timeToSet[j] < 0) timeToSet[j] = 59;
+        while(digitalRead(bottom) == LOW); //Wait for it to stop being pressed
+        delay(100); //Delay to debounce
+        timeToSet[j]--; //Decrement the value in the element we are currently setting
+        if ((j == 0) && (timeToSet[j] < 0)) timeToSet[j] = 23; //If we are altering the hours, and it is less than 0, set it to 23
+        if (timeToSet[j] < 0) timeToSet[j] = 59; //If we are not altering the hours, and it is less than 0, set it to 59
       }
-      switch (j) {
-        case 0: 
-          displayNumber(timeToSet[0] / 10, timeToSet[0] % 10, 10, 10, 10, 10);
+      switch (j) { //Case statement
+        case 0: //If j = 0
+          displayNumber(timeToSet[0] / 10, timeToSet[0] % 10, 10, 10, 10, 10); //Display the hours we are setting - blank the rest
           break;
-        case 1:
-          displayNumber(timeToSet[0] / 10, timeToSet[0] % 10, timeToSet[1] / 10, timeToSet[1] % 10, 10, 10);
+        case 1: //If j = 1
+          displayNumber(timeToSet[0] / 10, timeToSet[0] % 10, timeToSet[1] / 10, timeToSet[1] % 10, 10, 10); //Display the hours we have set, the minutes we are setting - blank the seconds
           break;
-        case 2:
-          displayNumber(timeToSet[0] / 10, timeToSet[0] % 10, timeToSet[1] / 10, timeToSet[1] % 10, timeToSet[j] / 10, timeToSet[j] % 10);
+        case 2: //If j = 2
+          displayNumber(timeToSet[0] / 10, timeToSet[0] % 10, timeToSet[1] / 10, timeToSet[1] % 10, timeToSet[j] / 10, timeToSet[j] % 10); //Display everything
           break;
-        default:
-          break;
+        default: //If j is something else (should never happen)
+          break; //Exit and cry.
       }
     }
-    while(digitalRead(middle) == LOW);
-    delay(100);
+    while(digitalRead(middle) == LOW); //Wait for middle button (which must have been pressed to get here) to not be pressed
+    delay(100); //Delay to debounce
   }
-  RTCTime time;
+  RTCTime time; //Set the time to the settings we configured
   time.hour = timeToSet[0];
   time.minute = timeToSet[1];
   time.second = timeToSet[2];
